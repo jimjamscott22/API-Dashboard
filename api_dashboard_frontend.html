@@ -189,6 +189,77 @@
             color: #667eea;
             font-weight: bold;
         }
+
+        /* Air Quality Card */
+        .aqi-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 1em;
+            margin-bottom: 12px;
+        }
+
+        .aqi-index {
+            font-size: 2em;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .aqi-pollutants {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 10px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .pollutant {
+            background: #f4f4f8;
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+
+        .pollutant span {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Hacker News Card */
+        .hn-story {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hn-story:last-child {
+            border-bottom: none;
+        }
+
+        .hn-title {
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .hn-title:hover {
+            color: #667eea;
+        }
+
+        .hn-meta {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .hn-score {
+            color: #e67e22;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -225,6 +296,19 @@
             <div class="card">
                 <h2>💬 Quote of the Day</h2>
                 <div id="quoteContent" class="loading">Loading...</div>
+            </div>
+
+            <!-- Air Quality Card -->
+            <div class="card">
+                <h2>🌬️ Air Quality</h2>
+                <input type="text" class="city-input" id="aqCityInput" placeholder="Enter city name" value="London">
+                <div id="airQualityContent" class="loading">Loading...</div>
+            </div>
+
+            <!-- Hacker News Card -->
+            <div class="card">
+                <h2>🔥 Hacker News Top 5</h2>
+                <div id="hackerNewsContent" class="loading">Loading...</div>
             </div>
         </div>
     </div>
@@ -374,9 +458,68 @@
             }
         }
 
-        // City input handler
+        async function loadAirQuality(city) {
+            const content = document.getElementById('airQualityContent');
+            content.innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/air-quality/${encodeURIComponent(city)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    content.innerHTML = `
+                        <div>
+                            <span class="aqi-index" style="color:${data.aqi_color}">${data.aqi}</span>
+                            <span class="aqi-badge" style="background:${data.aqi_color}">${data.aqi_label}</span>
+                        </div>
+                        <div class="aqi-pollutants">
+                            <div class="pollutant">PM2.5 <span>${data.pm2_5} µg/m³</span></div>
+                            <div class="pollutant">PM10 <span>${data.pm10} µg/m³</span></div>
+                            <div class="pollutant">O₃ <span>${data.o3} µg/m³</span></div>
+                            <div class="pollutant">NO₂ <span>${data.no2} µg/m³</span></div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load air quality data</div>`;
+            }
+        }
+
+        async function loadHackerNews() {
+            const content = document.getElementById('hackerNewsContent');
+
+            try {
+                const response = await fetch(`${API_BASE}/hackernews`);
+                const data = await response.json();
+
+                if (data.success) {
+                    content.innerHTML = data.stories.map(story => `
+                        <div class="hn-story">
+                            <a class="hn-title" href="${story.url}" target="_blank" rel="noopener noreferrer">${story.title}</a>
+                            <div class="hn-meta">
+                                <span class="hn-score">▲ ${story.score}</span>
+                                &nbsp;by ${story.by}
+                                &nbsp;· ${story.comments} comments
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load Hacker News stories</div>`;
+            }
+        }
+
+        // City input handlers
         document.getElementById('cityInput').addEventListener('change', (e) => {
             loadWeather(e.target.value);
+        });
+
+        document.getElementById('aqCityInput').addEventListener('change', (e) => {
+            loadAirQuality(e.target.value);
         });
 
         // Load all data on page load
@@ -386,6 +529,8 @@
             loadJoke();
             loadNASA();
             loadQuote();
+            loadAirQuality('London');
+            loadHackerNews();
         });
     </script>
 </body>

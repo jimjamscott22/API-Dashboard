@@ -177,6 +177,97 @@ async def get_quote():
     return result
 
 
+AQI_LABELS = {1: "Good", 2: "Fair", 3: "Moderate", 4: "Poor", 5: "Very Poor"}
+AQI_COLORS = {1: "#27ae60", 2: "#a8d627", 3: "#f39c12", 4: "#e67e22", 5: "#e74c3c"}
+
+
+@app.get("/api/air-quality/{city}")
+async def get_air_quality(city: str):
+    cached = get_from_cache(f"air_quality_{city}")
+    if cached:
+        return cached
+
+    API_KEY = os.getenv("OPENWEATHER_API_KEY", "YOUR_API_KEY_HERE")
+
+    async with httpx.AsyncClient(timeout=5) as client:
+        try:
+            # Geocode city to lat/lon
+            geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
+            geo_response = await client.get(geo_url)
+            geo_response.raise_for_status()
+            geo_data = geo_response.json()
+            if not geo_data:
+                return {"success": False, "error": f"City '{city}' not found"}
+            lat, lon = geo_data[0]["lat"], geo_data[0]["lon"]
+
+            # Fetch air pollution data
+            aq_url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}"
+            aq_response = await client.get(aq_url)
+            aq_response.raise_for_status()
+            aq_data = aq_response.json()
+
+            components = aq_data["list"][0]["components"]
+            aqi = aq_data["list"][0]["main"]["aqi"]
+            result = {
+                "success": True,
+                "city": geo_data[0]["name"],
+                "aqi": aqi,
+                "aqi_label": AQI_LABELS[aqi],
+                "aqi_color": AQI_COLORS[aqi],
+                "pm2_5": round(components["pm2_5"], 1),
+                "pm10": round(components["pm10"], 1),
+                "o3": round(components["o3"], 1),
+                "no2": round(components["no2"], 1),
+            }
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
+
+    set_cache(f"air_quality_{city}", result)
+    return result
+
+
+@app.get("/api/hackernews")
+async def get_hackernews():
+    cached = get_from_cache("hackernews")
+    if cached:
+        return cached
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        try:
+            ids_response = await client.get(
+                "https://hacker-news.firebaseio.com/v0/topstories.json"
+            )
+            ids_response.raise_for_status()
+            top_ids = ids_response.json()[:5]
+
+            import asyncio
+
+            async def fetch_story(story_id: int) -> dict:
+                r = await client.get(
+                    f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+                )
+                r.raise_for_status()
+                return r.json()
+
+            stories_raw = await asyncio.gather(*[fetch_story(i) for i in top_ids])
+            stories = [
+                {
+                    "title": s.get("title", ""),
+                    "url": s.get("url", f"https://news.ycombinator.com/item?id={s['id']}"),
+                    "score": s.get("score", 0),
+                    "by": s.get("by", ""),
+                    "comments": s.get("descendants", 0),
+                }
+                for s in stories_raw
+            ]
+            result = {"success": True, "stories": stories}
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
+
+    set_cache("hackernews", result)
+    return result
+
+
 def run():
     import uvicorn
     uvicorn.run("api_dashboard.main:app", host="0.0.0.0", port=8000, reload=True)
