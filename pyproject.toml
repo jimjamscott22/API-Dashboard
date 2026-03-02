@@ -9,7 +9,10 @@ dependencies = [
 ]
 
 [project.scripts]
-dev = "uvicorn api_dashboard_backend:app --reload --host 0.0.0.0 --port 8000"
+api-dashboard = "api_dashboard.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["api_dashboard"]
 
 [build-system]
 requires = ["hatchling"]

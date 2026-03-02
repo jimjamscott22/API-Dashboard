@@ -42,7 +42,7 @@ Both fall back to placeholder/demo keys if unset — NASA's `DEMO_KEY` works but
 ## Running
 
 ```bash
-uv run uvicorn api_dashboard_backend:app --reload
+uv run uvicorn api_dashboard.main:app --reload
 ```
 
 Then open [http://localhost:8000](http://localhost:8000) in your browser.
@@ -53,8 +53,11 @@ The interactive API docs are available at [http://localhost:8000/docs](http://lo
 
 ```
 api-dashboard/
-├── api_dashboard_backend.py   # FastAPI app
+├── api_dashboard/
+│   ├── __init__.py
+│   └── main.py                 # FastAPI app
+├── api_dashboard_backend.py    # Backwards-compatibility shim
 ├── api_dashboard_frontend.html # Single-page frontend
-├── pyproject.toml             # Project metadata and dependencies
+├── pyproject.toml              # Project metadata and dependencies
 └── .gitignore
 ```
