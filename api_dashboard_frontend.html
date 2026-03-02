@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .error {
+            color: #e74c3c;
+            padding: 10px;
+            background: #fadbd8;
+            border-radius: 5px;
+        }
+
+        /* Weather Card */
+        .weather-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .weather-icon {
+            font-size: 3em;
+        }
+
+        .weather-temp {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .weather-details {
+            margin-top: 10px;
+            color: #666;
+        }
+
+        .city-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        /* Crypto Card */
+        .crypto-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .crypto-item:last-child {
+            border-bottom: none;
+        }
+
+        .crypto-name {
+            font-weight: bold;
+        }
+
+        .crypto-price {
+            color: #667eea;
+        }
+
+        .crypto-change {
+            font-size: 0.9em;
+        }
+
+        .positive {
+            color: #27ae60;
+        }
+
+        .negative {
+            color: #e74c3c;
+        }
+
+        /* Joke Card */
+        .joke-text {
+            font-style: italic;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .refresh-btn {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+
+        /* NASA Card */
+        .nasa-image {
+            width: 100%;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .nasa-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .nasa-explanation {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        /* Quote Card */
+        .quote-text {
+            font-size: 1.1em;
+            font-style: italic;
+            color: #444;
+            line-height: 1.7;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 12px;
+        }
+
+        .quote-author {
+            text-align: right;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Personal API Dashboard</h1>
+        <div class="dashboard">
+            <!-- Weather Card -->
+            <div class="card">
+                <h2>🌤️ Weather</h2>
+                <input type="text" class="city-input" id="cityInput" placeholder="Enter city name" value="London">
+                <div id="weatherContent" class="loading">Loading...</div>
+            </div>
+
+            <!-- Crypto Card -->
+            <div class="card">
+                <h2>💰 Crypto Prices</h2>
+                <div id="cryptoContent" class="loading">Loading...</div>
+            </div>
+
+            <!-- Joke Card -->
+            <div class="card">
+                <h2>😄 Programming Joke</h2>
+                <div id="jokeContent" class="loading">Loading...</div>
+                <button class="refresh-btn" onclick="loadJoke()">New Joke</button>
+            </div>
+
+            <!-- NASA Card -->
+            <div class="card">
+                <h2>🌌 NASA Picture of the Day</h2>
+                <div id="nasaContent" class="loading">Loading...</div>
+            </div>
+
+            <!-- Quote Card -->
+            <div class="card">
+                <h2>💬 Quote of the Day</h2>
+                <div id="quoteContent" class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        async function loadWeather(city) {
+            const content = document.getElementById('weatherContent');
+            content.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/weather/${city}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    content.innerHTML = `
+                        <div class="weather-info">
+                            <img class="weather-icon" src="http://openweathermap.org/img/wn/${data.icon}@2x.png" alt="${data.description}">
+                            <div>
+                                <div class="weather-temp">${data.temperature}°C</div>
+                                <div>${data.description}</div>
+                            </div>
+                        </div>
+                        <div class="weather-details">
+                            <div>💧 Humidity: ${data.humidity}%</div>
+                            <div>💨 Wind: ${data.wind_speed} m/s</div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load weather data</div>`;
+            }
+        }
+
+        async function loadCrypto() {
+            const content = document.getElementById('cryptoContent');
+            
+            try {
+                const response = await fetch(`${API_BASE}/crypto`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    content.innerHTML = `
+                        <div class="crypto-item">
+                            <span class="crypto-name">Bitcoin</span>
+                            <div>
+                                <div class="crypto-price">$${data.bitcoin.price.toLocaleString()}</div>
+                                <div class="crypto-change ${data.bitcoin.change >= 0 ? 'positive' : 'negative'}">
+                                    ${data.bitcoin.change >= 0 ? '▲' : '▼'} ${Math.abs(data.bitcoin.change)}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="crypto-item">
+                            <span class="crypto-name">Ethereum</span>
+                            <div>
+                                <div class="crypto-price">$${data.ethereum.price.toLocaleString()}</div>
+                                <div class="crypto-change ${data.ethereum.change >= 0 ? 'positive' : 'negative'}">
+                                    ${data.ethereum.change >= 0 ? '▲' : '▼'} ${Math.abs(data.ethereum.change)}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="crypto-item">
+                            <span class="crypto-name">Cardano</span>
+                            <div>
+                                <div class="crypto-price">$${data.cardano.price.toLocaleString()}</div>
+                                <div class="crypto-change ${data.cardano.change >= 0 ? 'positive' : 'negative'}">
+                                    ${data.cardano.change >= 0 ? '▲' : '▼'} ${Math.abs(data.cardano.change)}%
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load crypto data</div>`;
+            }
+        }
+
+        async function loadJoke() {
+            const content = document.getElementById('jokeContent');
+            content.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/joke`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    content.innerHTML = `<div class="joke-text">${data.joke}</div>`;
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load joke</div>`;
+            }
+        }
+
+        async function loadNASA() {
+            const content = document.getElementById('nasaContent');
+            
+            try {
+                const response = await fetch(`${API_BASE}/nasa`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.media_type === 'image') {
+                        content.innerHTML = `
+                            <div class="nasa-title">${data.title}</div>
+                            <img class="nasa-image" src="${data.url}" alt="${data.title}">
+                            <div class="nasa-explanation">${data.explanation}</div>
+                        `;
+                    } else {
+                        content.innerHTML = `
+                            <div class="nasa-title">${data.title}</div>
+                            <div class="nasa-explanation">${data.explanation}</div>
+                            <a href="${data.url}" target="_blank">View Media</a>
+                        `;
+                    }
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load NASA data</div>`;
+            }
+        }
+
+        async function loadQuote() {
+            const content = document.getElementById('quoteContent');
+
+            try {
+                const response = await fetch(`${API_BASE}/quote`);
+                const data = await response.json();
+
+                if (data.success) {
+                    content.innerHTML = `
+                        <div class="quote-text">"${data.quote}"</div>
+                        <div class="quote-author">— ${data.author}</div>
+                    `;
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load quote</div>`;
+            }
+        }
+
+        // City input handler
+        document.getElementById('cityInput').addEventListener('change', (e) => {
+            loadWeather(e.target.value);
+        });
+
+        // Load all data on page load
+        window.addEventListener('load', () => {
+            loadWeather('London');
+            loadCrypto();
+            loadJoke();
+            loadNASA();
+            loadQuote();
+        });
+    </script>
+</body>
+</html>

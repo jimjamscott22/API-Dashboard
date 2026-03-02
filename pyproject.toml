@@ -1,0 +1,16 @@
+[project]
+name = "api-dashboard"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.28",
+]
+
+[project.scripts]
+dev = "uvicorn api_dashboard_backend:app --reload --host 0.0.0.0 --port 8000"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
