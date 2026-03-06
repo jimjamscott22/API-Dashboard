@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Dashboard</title>
     <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --card-bg: white;
+            --card-shadow: rgba(0,0,0,0.2);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --accent: #667eea;
+            --accent-hover: #5568d3;
+            --border-color: #eee;
+            --input-border: #667eea;
+            --pollutant-bg: #f4f4f8;
+            --error-bg: #fadbd8;
+            --error-color: #e74c3c;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --card-bg: #0f3460;
+            --card-shadow: rgba(0,0,0,0.5);
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0c0;
+            --text-muted: #7070a0;
+            --accent: #a78bfa;
+            --accent-hover: #8b6ef0;
+            --border-color: #1e4080;
+            --input-border: #a78bfa;
+            --pollutant-bg: #0a2540;
+            --error-bg: #4a1515;
+            --error-color: #f87171;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,9 +47,10 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s;
         }
 
         .container {
@@ -23,12 +58,35 @@
             margin: 0 auto;
         }
 
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
         h1 {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #themeToggle {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: background 0.3s;
+            line-height: 1;
+        }
+
+        #themeToggle:hover {
+            background: rgba(255,255,255,0.35);
         }
 
         .dashboard {
@@ -38,11 +96,12 @@
         }
 
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px var(--card-shadow);
+            transition: transform 0.3s ease, background 0.3s;
+            position: relative;
         }
 
         .card:hover {
@@ -50,22 +109,30 @@
         }
 
         .card h2 {
-            color: #667eea;
+            color: var(--accent);
             margin-bottom: 15px;
             font-size: 1.5em;
         }
 
         .loading {
             text-align: center;
-            color: #666;
+            color: var(--text-secondary);
             padding: 20px;
         }
 
         .error {
-            color: #e74c3c;
+            color: var(--error-color);
             padding: 10px;
-            background: #fadbd8;
+            background: var(--error-bg);
             border-radius: 5px;
+        }
+
+        .last-updated {
+            display: block;
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 0.75em;
+            margin-top: 10px;
         }
 
         /* Weather Card */
@@ -82,21 +149,23 @@
         .weather-temp {
             font-size: 2.5em;
             font-weight: bold;
-            color: #667eea;
+            color: var(--accent);
         }
 
         .weather-details {
             margin-top: 10px;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         .city-input {
             width: 100%;
             padding: 8px;
             margin-bottom: 10px;
-            border: 2px solid #667eea;
+            border: 2px solid var(--input-border);
             border-radius: 5px;
             font-size: 1em;
+            background: var(--card-bg);
+            color: var(--text-primary);
         }
 
         /* Crypto Card */
@@ -104,7 +173,7 @@
             display: flex;
             justify-content: space-between;
             padding: 10px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .crypto-item:last-child {
@@ -113,10 +182,11 @@
 
         .crypto-name {
             font-weight: bold;
+            color: var(--text-primary);
         }
 
         .crypto-price {
-            color: #667eea;
+            color: var(--accent);
         }
 
         .crypto-change {
@@ -134,14 +204,14 @@
         /* Joke Card */
         .joke-text {
             font-style: italic;
-            color: #555;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
         .refresh-btn {
             margin-top: 15px;
             padding: 8px 15px;
-            background: #667eea;
+            background: var(--accent);
             color: white;
             border: none;
             border-radius: 5px;
@@ -150,7 +220,7 @@
         }
 
         .refresh-btn:hover {
-            background: #5568d3;
+            background: var(--accent-hover);
         }
 
         /* NASA Card */
@@ -163,10 +233,11 @@
         .nasa-title {
             font-weight: bold;
             margin-bottom: 10px;
+            color: var(--text-primary);
         }
 
         .nasa-explanation {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.9em;
             line-height: 1.5;
             max-height: 150px;
@@ -177,16 +248,16 @@
         .quote-text {
             font-size: 1.1em;
             font-style: italic;
-            color: #444;
+            color: var(--text-primary);
             line-height: 1.7;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--accent);
             padding-left: 15px;
             margin-bottom: 12px;
         }
 
         .quote-author {
             text-align: right;
-            color: #667eea;
+            color: var(--accent);
             font-weight: bold;
         }
 
@@ -213,25 +284,25 @@
             grid-template-columns: 1fr 1fr;
             gap: 6px;
             margin-top: 10px;
-            color: #555;
+            color: var(--text-secondary);
             font-size: 0.9em;
         }
 
         .pollutant {
-            background: #f4f4f8;
+            background: var(--pollutant-bg);
             border-radius: 6px;
             padding: 6px 10px;
         }
 
         .pollutant span {
-            color: #667eea;
+            color: var(--accent);
             font-weight: bold;
         }
 
         /* Hacker News Card */
         .hn-story {
             padding: 10px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .hn-story:last-child {
@@ -240,7 +311,7 @@
 
         .hn-title {
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
             text-decoration: none;
             display: block;
             margin-bottom: 4px;
@@ -248,23 +319,116 @@
         }
 
         .hn-title:hover {
-            color: #667eea;
+            color: var(--accent);
         }
 
         .hn-meta {
             font-size: 0.8em;
-            color: #999;
+            color: var(--text-muted);
         }
 
         .hn-score {
             color: #e67e22;
             font-weight: bold;
         }
+
+        /* On This Day Card */
+        .otd-event {
+            display: flex;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .otd-event:last-child {
+            border-bottom: none;
+        }
+
+        .otd-year {
+            flex-shrink: 0;
+            background: var(--accent);
+            color: white;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+            height: fit-content;
+            margin-top: 2px;
+        }
+
+        .otd-text {
+            color: var(--text-primary);
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .otd-text a {
+            color: var(--accent);
+            font-size: 0.85em;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .otd-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* GitHub Trending Card */
+        .gh-repo {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .gh-repo:last-child {
+            border-bottom: none;
+        }
+
+        .gh-repo-name {
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .gh-repo-name:hover {
+            text-decoration: underline;
+        }
+
+        .gh-repo-desc {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        .gh-repo-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .gh-stars {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .gh-lang {
+            background: var(--pollutant-bg);
+            padding: 1px 7px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Personal API Dashboard</h1>
+        <div class="header">
+            <h1>🚀 Personal API Dashboard</h1>
+            <button id="themeToggle" title="Toggle dark mode">🌙</button>
+        </div>
         <div class="dashboard">
             <!-- Weather Card -->
             <div class="card">
@@ -310,20 +474,62 @@
                 <h2>🔥 Hacker News Top 5</h2>
                 <div id="hackerNewsContent" class="loading">Loading...</div>
             </div>
+
+            <!-- On This Day Card -->
+            <div class="card">
+                <h2>📅 On This Day</h2>
+                <div id="onThisDayContent" class="loading">Loading...</div>
+            </div>
+
+            <!-- GitHub Trending Card -->
+            <div class="card">
+                <h2>⭐ GitHub Trending</h2>
+                <div id="githubTrendingContent" class="loading">Loading...</div>
+            </div>
         </div>
     </div>
 
     <script>
         const API_BASE = 'http://localhost:8000/api';
 
+        // ── Theme ──────────────────────────────────────────────────────────────
+        const themeToggle = document.getElementById('themeToggle');
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        applyTheme(localStorage.getItem('theme') || 'light');
+
+        themeToggle.addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
+        });
+
+        // ── Last-updated helper ────────────────────────────────────────────────
+        function markUpdated(contentId) {
+            const el = document.getElementById(contentId);
+            if (!el) return;
+            const existing = el.parentElement.querySelector('.last-updated');
+            if (existing) existing.remove();
+            const stamp = document.createElement('small');
+            stamp.className = 'last-updated';
+            const now = new Date();
+            stamp.textContent = `Updated ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            el.parentElement.appendChild(stamp);
+        }
+
+        // ── Weather ───────────────────────────────────────────────────────────
         async function loadWeather(city) {
             const content = document.getElementById('weatherContent');
             content.innerHTML = '<div class="loading">Loading...</div>';
-            
+
             try {
-                const response = await fetch(`${API_BASE}/weather/${city}`);
+                const response = await fetch(`${API_BASE}/weather/${encodeURIComponent(city)}`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     content.innerHTML = `
                         <div class="weather-info">
@@ -338,6 +544,7 @@
                             <div>💨 Wind: ${data.wind_speed} m/s</div>
                         </div>
                     `;
+                    markUpdated('weatherContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -346,13 +553,14 @@
             }
         }
 
+        // ── Crypto ────────────────────────────────────────────────────────────
         async function loadCrypto() {
             const content = document.getElementById('cryptoContent');
-            
+
             try {
                 const response = await fetch(`${API_BASE}/crypto`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     content.innerHTML = `
                         <div class="crypto-item">
@@ -383,6 +591,7 @@
                             </div>
                         </div>
                     `;
+                    markUpdated('cryptoContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -391,16 +600,18 @@
             }
         }
 
+        // ── Joke ──────────────────────────────────────────────────────────────
         async function loadJoke() {
             const content = document.getElementById('jokeContent');
             content.innerHTML = '<div class="loading">Loading...</div>';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/joke`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     content.innerHTML = `<div class="joke-text">${data.joke}</div>`;
+                    markUpdated('jokeContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -409,13 +620,14 @@
             }
         }
 
+        // ── NASA ──────────────────────────────────────────────────────────────
         async function loadNASA() {
             const content = document.getElementById('nasaContent');
-            
+
             try {
                 const response = await fetch(`${API_BASE}/nasa`);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     if (data.media_type === 'image') {
                         content.innerHTML = `
@@ -430,6 +642,7 @@
                             <a href="${data.url}" target="_blank">View Media</a>
                         `;
                     }
+                    markUpdated('nasaContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -438,6 +651,7 @@
             }
         }
 
+        // ── Quote ─────────────────────────────────────────────────────────────
         async function loadQuote() {
             const content = document.getElementById('quoteContent');
 
@@ -450,6 +664,7 @@
                         <div class="quote-text">"${data.quote}"</div>
                         <div class="quote-author">— ${data.author}</div>
                     `;
+                    markUpdated('quoteContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -458,6 +673,7 @@
             }
         }
 
+        // ── Air Quality ───────────────────────────────────────────────────────
         async function loadAirQuality(city) {
             const content = document.getElementById('airQualityContent');
             content.innerHTML = '<div class="loading">Loading...</div>';
@@ -479,6 +695,7 @@
                             <div class="pollutant">NO₂ <span>${data.no2} µg/m³</span></div>
                         </div>
                     `;
+                    markUpdated('airQualityContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -487,6 +704,7 @@
             }
         }
 
+        // ── Hacker News ───────────────────────────────────────────────────────
         async function loadHackerNews() {
             const content = document.getElementById('hackerNewsContent');
 
@@ -505,6 +723,7 @@
                             </div>
                         </div>
                     `).join('');
+                    markUpdated('hackerNewsContent');
                 } else {
                     content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
                 }
@@ -513,24 +732,90 @@
             }
         }
 
-        // City input handlers
+        // ── On This Day ───────────────────────────────────────────────────────
+        async function loadOnThisDay() {
+            const content = document.getElementById('onThisDayContent');
+
+            try {
+                const response = await fetch(`${API_BASE}/onthisday`);
+                const data = await response.json();
+
+                if (data.success) {
+                    content.innerHTML = `<div style="font-size:0.85em;color:var(--text-muted);margin-bottom:8px">${data.date}</div>` +
+                        data.events.map(e => `
+                            <div class="otd-event">
+                                <span class="otd-year">${e.year}</span>
+                                <div class="otd-text">
+                                    ${e.text}
+                                    ${e.link ? `<br><a href="${e.link}" target="_blank" rel="noopener noreferrer">Wikipedia →</a>` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    markUpdated('onThisDayContent');
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load On This Day data</div>`;
+            }
+        }
+
+        // ── GitHub Trending ───────────────────────────────────────────────────
+        async function loadGithubTrending() {
+            const content = document.getElementById('githubTrendingContent');
+
+            try {
+                const response = await fetch(`${API_BASE}/github-trending`);
+                const data = await response.json();
+
+                if (data.success) {
+                    content.innerHTML = data.repos.map(repo => `
+                        <div class="gh-repo">
+                            <a class="gh-repo-name" href="${repo.url}" target="_blank" rel="noopener noreferrer">${repo.name}</a>
+                            ${repo.description ? `<div class="gh-repo-desc">${repo.description}</div>` : ''}
+                            <div class="gh-repo-meta">
+                                <span class="gh-stars">⭐ ${repo.stars.toLocaleString()}</span>
+                                <span class="gh-lang">${repo.language}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    markUpdated('githubTrendingContent');
+                } else {
+                    content.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="error">Failed to load GitHub Trending data</div>`;
+            }
+        }
+
+        // ── City input handlers ───────────────────────────────────────────────
         document.getElementById('cityInput').addEventListener('change', (e) => {
+            localStorage.setItem('weather_city', e.target.value);
             loadWeather(e.target.value);
         });
 
         document.getElementById('aqCityInput').addEventListener('change', (e) => {
+            localStorage.setItem('aq_city', e.target.value);
             loadAirQuality(e.target.value);
         });
 
-        // Load all data on page load
+        // ── Init ──────────────────────────────────────────────────────────────
         window.addEventListener('load', () => {
-            loadWeather('London');
+            // Restore persisted cities
+            const weatherCity = localStorage.getItem('weather_city') || 'London';
+            const aqCity = localStorage.getItem('aq_city') || 'London';
+            document.getElementById('cityInput').value = weatherCity;
+            document.getElementById('aqCityInput').value = aqCity;
+
+            loadWeather(weatherCity);
             loadCrypto();
             loadJoke();
             loadNASA();
             loadQuote();
-            loadAirQuality('London');
+            loadAirQuality(aqCity);
             loadHackerNews();
+            loadOnThisDay();
+            loadGithubTrending();
         });
     </script>
 </body>

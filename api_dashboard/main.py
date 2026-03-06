@@ -268,6 +268,74 @@ async def get_hackernews():
     return result
 
 
+@app.get("/api/onthisday")
+async def get_on_this_day():
+    cached = get_from_cache("onthisday")
+    if cached:
+        return cached
+
+    today = datetime.now()
+    url = f"https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/{today.month}/{today.day}"
+
+    async with httpx.AsyncClient(timeout=5) as client:
+        try:
+            r = await client.get(url, headers={"Accept": "application/json"})
+            r.raise_for_status()
+            data = r.json()
+            events = [
+                {
+                    "year": e["year"],
+                    "text": e["text"],
+                    "link": e.get("pages", [{}])[0].get("content_urls", {}).get("desktop", {}).get("page", ""),
+                }
+                for e in data.get("events", [])[:5]
+            ]
+            result = {
+                "success": True,
+                "date": today.strftime("%B") + " " + str(today.day),
+                "events": events,
+            }
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
+
+    set_cache("onthisday", result)
+    return result
+
+
+@app.get("/api/github-trending")
+async def get_github_trending():
+    cached = get_from_cache("github_trending")
+    if cached:
+        return cached
+
+    week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    url = (
+        "https://api.github.com/search/repositories"
+        f"?q=created:>{week_ago}&sort=stars&order=desc&per_page=5"
+    )
+
+    async with httpx.AsyncClient(timeout=5, headers={"Accept": "application/vnd.github.v3+json"}) as client:
+        try:
+            r = await client.get(url)
+            r.raise_for_status()
+            repos = [
+                {
+                    "name": repo["full_name"],
+                    "description": repo.get("description") or "",
+                    "stars": repo["stargazers_count"],
+                    "language": repo.get("language") or "—",
+                    "url": repo["html_url"],
+                }
+                for repo in r.json().get("items", [])
+            ]
+            result = {"success": True, "repos": repos}
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
+
+    set_cache("github_trending", result)
+    return result
+
+
 def run():
     import uvicorn
     uvicorn.run("api_dashboard.main:app", host="0.0.0.0", port=8000, reload=True)
